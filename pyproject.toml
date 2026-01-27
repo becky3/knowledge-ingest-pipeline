@@ -1,0 +1,14 @@
+[project]
+name = "knowledge-ingest-pipeline"
+version = "0.1.0"
+description = "Automated knowledge ingestion pipeline (RSS → summarize → Notion)."
+requires-python = ">=3.10"
+dependencies = [
+  "feedparser",
+  "requests",
+  "notion-client",
+  "openai",
+]
+
+[dependency-groups]
+dev = []
