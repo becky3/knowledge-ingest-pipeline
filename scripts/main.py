@@ -67,11 +67,6 @@ def get_database_context(database_id: str) -> dict:
     title_items = db.get("title") or []
     if title_items:
         db_title = "".join([t.get("plain_text", "") for t in title_items])
-    print(
-        f"  -> DB check: object={db_object} id={db_id or '(none)'} "
-        f"properties={len(props)} data_sources={len(data_sources)}"
-    )
-    print(f"  -> DB info: title={db_title or '(empty)'} url={db_url or '(none)'}")
     if not db_id:
         raise RuntimeError(
             "Failed to read database ID. DB_ID may be incorrect or the integration lacks access."
@@ -90,7 +85,6 @@ def get_database_context(database_id: str) -> dict:
         ) from exc
     ds_props = data_source.get("properties", {})
     if ds_props:
-        print(f"  -> Data source properties: {', '.join(sorted(ds_props.keys()))}")
         _DB_CONTEXT_CACHE = {"db": db, "data_source_id": data_source_id}
         return _DB_CONTEXT_CACHE
     raise RuntimeError(
@@ -121,7 +115,6 @@ def notion_page_exists_by_url(database_id: str, url: str) -> bool:
     try:
         normalized = normalize_url(url)
         raw = url
-        print(f"  -> checking Notion URL (normalized): {normalized}")
         data_source_id = get_data_source_id(database_id)
         result = notion.data_sources.query(
             **{
@@ -131,7 +124,6 @@ def notion_page_exists_by_url(database_id: str, url: str) -> bool:
             }
         )
         normalized_matches = len(result.get("results", []))
-        print(f"  -> Notion matches (normalized): {normalized_matches}")
         if normalized_matches > 0:
             return True
 
@@ -144,7 +136,6 @@ def notion_page_exists_by_url(database_id: str, url: str) -> bool:
                 }
             )
             raw_matches = len(result.get("results", []))
-            print(f"  -> Notion matches (raw): {raw_matches}")
             return raw_matches > 0
 
         return False
@@ -161,7 +152,6 @@ def get_data_source_id(database_id: str) -> str:
         return _DATA_SOURCE_ID_CACHE
     context = get_database_context(database_id)
     _DATA_SOURCE_ID_CACHE = context["data_source_id"]
-    print(f"  -> using data_source_id: {_DATA_SOURCE_ID_CACHE}")
     return _DATA_SOURCE_ID_CACHE
 
 
