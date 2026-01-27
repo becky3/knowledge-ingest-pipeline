@@ -110,9 +110,6 @@ def normalize_url(url: str) -> str:
 def notion_page_exists_by_url(database_id: str, url: str) -> bool:
     if not database_id or not url:
         return False
-def notion_page_exists_by_url(database_id: str, url: str) -> bool:
-    if not database_id or not url:
-        return False
     
     # Use raw requests because notion-client is broken in this environment
     headers = {
