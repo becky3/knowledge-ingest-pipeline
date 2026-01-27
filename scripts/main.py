@@ -2,10 +2,13 @@ import feedparser
 import requests
 import os
 import re
+import logging
+import json
 from html import unescape
 from urllib.parse import urlsplit, urlunsplit
 from notion_client import Client
 from openai import OpenAI
+from bs4 import BeautifulSoup
 
 def load_dotenv(path: str) -> None:
     if not os.path.exists(path):
@@ -21,9 +24,16 @@ def load_dotenv(path: str) -> None:
             if key:
                 os.environ[key] = value
 
-
 # Works locally with .env and in GitHub Actions via secrets/env.
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+logger = logging.getLogger(__name__)
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DB_ID = os.getenv("DB_ID")
@@ -41,10 +51,13 @@ if not OPENAI_KEY:
 notion = Client(auth=NOTION_TOKEN)
 client = None if TEST_MODE else OpenAI(api_key=OPENAI_KEY)
 
-feeds = [
- "https://medium.com/feed/towards-data-science",
- "https://medium.com/feed/tag/artificial-intelligence"
-]
+# Load feeds from feeds.json
+try:
+    with open(os.path.join(os.path.dirname(__file__), "..", "feeds.json"), "r", encoding="utf-8") as f:
+        feeds = json.load(f)
+except Exception as e:
+    logger.error(f"Failed to load feeds.json: {e}")
+    feeds = []
 
 _DB_CONTEXT_CACHE = None
 
@@ -62,11 +75,7 @@ def get_database_context(database_id: str) -> dict:
     db_object = db.get("object")
     props = db.get("properties", {})
     data_sources = db.get("data_sources", [])
-    db_url = db.get("url")
-    db_title = ""
-    title_items = db.get("title") or []
-    if title_items:
-        db_title = "".join([t.get("plain_text", "") for t in title_items])
+    
     if not db_id:
         raise RuntimeError(
             "Failed to read database ID. DB_ID may be incorrect or the integration lacks access."
@@ -94,13 +103,40 @@ def get_database_context(database_id: str) -> dict:
 def ensure_db_access(database_id: str) -> None:
     get_database_context(database_id)
 
+_DATA_SOURCE_ID_CACHE = None
+def get_data_source_id(database_id: str) -> str:
+    global _DATA_SOURCE_ID_CACHE
+    if _DATA_SOURCE_ID_CACHE:
+        return _DATA_SOURCE_ID_CACHE
+    context = get_database_context(database_id)
+    _DATA_SOURCE_ID_CACHE = context["data_source_id"]
+    return _DATA_SOURCE_ID_CACHE
+
+
 def strip_html(html: str) -> str:
-    # Simple tag stripper to avoid extra dependencies.
-    text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", " ", html)
-    text = re.sub(r"(?s)<[^>]+>", " ", text)
-    text = unescape(text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+    # Use BeautifulSoup depending on availability
+    if not html:
+        return ""
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()
+        text = soup.get_text()
+        # break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # drop blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+        return text
+    except Exception:
+        # Fallback to simple regex if BS4 fails
+        text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", " ", html)
+        text = re.sub(r"(?s)<[^>]+>", " ", text)
+        text = unescape(text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
 
 
 def normalize_url(url: str) -> str:
@@ -140,19 +176,9 @@ def notion_page_exists_by_url(database_id: str, url: str) -> bool:
 
         return False
     except Exception as exc:
-        print(f"  -> Notion check error: {exc}")
+        logger.warning(f"Notion check error: {exc}")
         # If the check fails, allow processing rather than hard-fail.
         return False
-
-
-_DATA_SOURCE_ID_CACHE = None
-def get_data_source_id(database_id: str) -> str:
-    global _DATA_SOURCE_ID_CACHE
-    if _DATA_SOURCE_ID_CACHE:
-        return _DATA_SOURCE_ID_CACHE
-    context = get_database_context(database_id)
-    _DATA_SOURCE_ID_CACHE = context["data_source_id"]
-    return _DATA_SOURCE_ID_CACHE
 
 
 all_entries = []
@@ -169,9 +195,9 @@ skipped_count = 0
 for e in all_entries:
     processed += 1
     normalized_link = normalize_url(e.link)
-    print(f"[{processed}/{total_entries}] {e.title}")
+    logger.info(f"[{processed}/{total_entries}] {e.title}")
     if notion_page_exists_by_url(DB_ID, e.link):
-        print("  -> skip (already exists)")
+        logger.info("  -> skip (already exists)")
         skipped_count += 1
         continue
 
@@ -199,8 +225,8 @@ for e in all_entries:
     """
 
     if TEST_MODE:
-        print("  -> summary skipped (TEST_MODE)")
-        print("  -> Notion write skipped (TEST_MODE)")
+        logger.info("  -> summary skipped (TEST_MODE)")
+        logger.info("  -> Notion write skipped (TEST_MODE)")
         added_count += 1  # count as would-add for parity with non-test runs
         continue
 
@@ -220,9 +246,9 @@ for e in all_entries:
           }
         )
         added_count += 1
-        print("  -> done")
+        logger.info("  -> done")
     except Exception as ex:
-        print(f"  -> ERROR: Failed to process entry '{e.title}' (URL: {normalized_link}): {ex}")
+        logger.error(f"Failed to process entry '{e.title}' (URL: {normalized_link}): {ex}")
         continue
 
-print(f"Added: {added_count}, Skipped: {skipped_count}")
+logger.info(f"Added: {added_count}, Skipped: {skipped_count}")
