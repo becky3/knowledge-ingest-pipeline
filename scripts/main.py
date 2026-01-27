@@ -4,6 +4,9 @@ import os
 import re
 import logging
 import json
+import uuid
+from datetime import datetime
+from time import mktime
 from html import unescape
 from urllib.parse import urlsplit, urlunsplit
 from notion_client import Client
@@ -36,14 +39,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID = os.getenv("DB_ID")
+DB_ID_RAW = os.getenv("DB_ID")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY")
 TEST_MODE = (os.getenv("TEST_MODE") or "").lower() in ("1", "true", "yes", "y", "on")
 
 if not NOTION_TOKEN:
     raise RuntimeError("NOTION_TOKEN is not set. Put it in .env or your environment.")
-if not DB_ID:
+if not DB_ID_RAW:
     raise RuntimeError("DB_ID is not set. Put it in .env or your environment.")
+
+# Format DB_ID to ensure it has dashes (required for some API endpoints/URLs)
+try:
+    DB_ID = str(uuid.UUID(DB_ID_RAW))
+except ValueError:
+    logger.warning(f"DB_ID {DB_ID_RAW} doesn't look like a UUID. Using as-is.")
+    DB_ID = DB_ID_RAW
 
 if not OPENAI_KEY:
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env or your environment.")
@@ -58,59 +68,6 @@ try:
 except Exception as e:
     logger.error(f"Failed to load feeds.json: {e}")
     feeds = []
-
-_DB_CONTEXT_CACHE = None
-
-def get_database_context(database_id: str) -> dict:
-    global _DB_CONTEXT_CACHE
-    if _DB_CONTEXT_CACHE:
-        return _DB_CONTEXT_CACHE
-    try:
-        db = notion.databases.retrieve(database_id=database_id)
-    except Exception as exc:
-        raise RuntimeError(
-            f"Failed to retrieve database. Check NOTION_TOKEN, DB_ID, and sharing permissions. ({exc})"
-        ) from exc
-    db_id = db.get("id")
-    db_object = db.get("object")
-    props = db.get("properties", {})
-    data_sources = db.get("data_sources", [])
-    
-    if not db_id:
-        raise RuntimeError(
-            "Failed to read database ID. DB_ID may be incorrect or the integration lacks access."
-        )
-    if not data_sources:
-        raise RuntimeError("No data_sources found for the database. Check permissions.")
-    data_source_id = data_sources[0].get("id")
-    if props:
-        _DB_CONTEXT_CACHE = {"db": db, "data_source_id": data_source_id}
-        return _DB_CONTEXT_CACHE
-    try:
-        data_source = notion.data_sources.retrieve(data_source_id=data_source_id)
-    except Exception as exc:
-        raise RuntimeError(
-            f"Failed to retrieve data source. Check integration access. ({exc})"
-        ) from exc
-    ds_props = data_source.get("properties", {})
-    if ds_props:
-        _DB_CONTEXT_CACHE = {"db": db, "data_source_id": data_source_id}
-        return _DB_CONTEXT_CACHE
-    raise RuntimeError(
-        "Failed to read database properties. DB_ID may be incorrect or the integration lacks access."
-    )
-
-def ensure_db_access(database_id: str) -> None:
-    get_database_context(database_id)
-
-_DATA_SOURCE_ID_CACHE = None
-def get_data_source_id(database_id: str) -> str:
-    global _DATA_SOURCE_ID_CACHE
-    if _DATA_SOURCE_ID_CACHE:
-        return _DATA_SOURCE_ID_CACHE
-    context = get_database_context(database_id)
-    _DATA_SOURCE_ID_CACHE = context["data_source_id"]
-    return _DATA_SOURCE_ID_CACHE
 
 
 def strip_html(html: str) -> str:
@@ -148,41 +105,64 @@ def normalize_url(url: str) -> str:
 def notion_page_exists_by_url(database_id: str, url: str) -> bool:
     if not database_id or not url:
         return False
+def notion_page_exists_by_url(database_id: str, url: str) -> bool:
+    if not database_id or not url:
+        return False
+    
+    # Use raw requests because notion-client is broken in this environment
+    headers = {
+        "Authorization": f"Bearer {NOTION_TOKEN}",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+    }
+    
+    # Ensure ID has dashes for the URL
+    try:
+        dashed_id = str(uuid.UUID(database_id))
+    except ValueError:
+        dashed_id = database_id
+        
+    api_url = f"https://api.notion.com/v1/databases/{dashed_id}/query"
+
     try:
         normalized = normalize_url(url)
         raw = url
-        data_source_id = get_data_source_id(database_id)
-        result = notion.data_sources.query(
-            **{
-                "data_source_id": data_source_id,
+        
+        # Check normalized URL
+        resp = requests.post(
+            api_url, 
+            headers=headers, 
+            json={
                 "filter": {"property": "URL", "url": {"equals": normalized}},
                 "page_size": 1,
-            }
+            },
+            timeout=10
         )
-        normalized_matches = len(result.get("results", []))
-        if normalized_matches > 0:
+        if resp.status_code == 200 and resp.json().get("results"):
             return True
-
+            
+        # Check raw URL if different
         if raw != normalized:
-            result = notion.data_sources.query(
-                **{
-                    "data_source_id": data_source_id,
+            resp = requests.post(
+                api_url, 
+                headers=headers, 
+                json={
                     "filter": {"property": "URL", "url": {"equals": raw}},
                     "page_size": 1,
-                }
+                },
+                timeout=10
             )
-            raw_matches = len(result.get("results", []))
-            return raw_matches > 0
-
+            if resp.status_code == 200 and resp.json().get("results"):
+                return True
+            
         return False
     except Exception as exc:
         logger.warning(f"Notion check error: {exc}")
-        # If the check fails, allow processing rather than hard-fail.
         return False
 
 
 all_entries = []
-ensure_db_access(DB_ID)
+
 for url in feeds:
     feed = feedparser.parse(url)
     all_entries.extend(feed.entries[:5])
@@ -217,11 +197,34 @@ for e in all_entries:
 
     article_text = strip_html(raw_html)[:6000]
 
+    # Date parsing
+    published_date_str = None
+    if "published_parsed" in e and e.published_parsed:
+        try:
+            dt = datetime.fromtimestamp(mktime(e.published_parsed))
+            # Notion wants ISO8601
+            published_date_str = dt.isoformat()
+        except Exception:
+            pass
+    elif "updated_parsed" in e and e.updated_parsed:
+        try:
+            dt = datetime.fromtimestamp(mktime(e.updated_parsed))
+            published_date_str = dt.isoformat()
+        except Exception:
+            pass
+
+    # Updated Prompt Logic: Handle empty text
+    content_part = f"本文:\n{article_text}" if article_text and len(article_text) > 50 else "本文: (内容が取得できませんでした。タイトルから内容を推測してください)"
+
     prompt = f"""
     以下の記事を日本語で3行要約し、
     重要ポイントを箇条書きで出力してください。
-    ---
-    {article_text}
+    もし本文がない場合は、タイトルから内容を推測して要約を作成してください。
+    絶対に「情報不足で要約できない」とは答えず、推測できる範囲で出力すること。
+
+    タイトル: {e.title}
+
+    {content_part}
     """
 
     if TEST_MODE:
@@ -237,13 +240,18 @@ for e in all_entries:
         )
         summary = res.choices[0].message.content
 
-        notion.pages.create(
-          parent={"type": "data_source_id", "data_source_id": get_data_source_id(DB_ID)},
-          properties={
+        properties = {
             "Title":{"title":[{"text":{"content":e.title}}]},
             "Summary":{"rich_text":[{"text":{"content":summary}}]},
             "URL":{"url":e.link}
-          }
+        }
+        
+        if published_date_str:
+            properties["Published"] = {"date": {"start": published_date_str}}
+
+        notion.pages.create(
+          parent={"database_id": DB_ID},
+          properties=properties
         )
         added_count += 1
         logger.info("  -> done")
