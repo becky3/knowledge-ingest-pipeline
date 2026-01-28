@@ -36,7 +36,15 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 ## Notion Integration Setup
 
-This project uses the Notion API. You must configure the following environment variables in `.env.local`:
+
+You can create your `.env.local` file by copying from the example file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then edit `.env.local` to add your values:
+
 
 1.  **NOTION_TOKEN**: Your Notion Internal Integration Token.
 2.  **NOTION_DATABASE_ID**: The ID of the Notion database to display.

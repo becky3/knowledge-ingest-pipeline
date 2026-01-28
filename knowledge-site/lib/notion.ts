@@ -19,10 +19,10 @@ export const getNotionClient = () => {
 
 export const getDatabaseId = () => {
   // Support both specific and generic names for compatibility
-  const databaseId = process.env.NOTION_DATABASE_ID || process.env.DB_ID;
+  const databaseId = process.env.NOTION_DATABASE_ID;
 
   if (!databaseId) {
-    throw new Error("Missing NOTION_DATABASE_ID or DB_ID environment variable");
+    throw new Error("Missing NOTION_DATABASE_ID environment variable");
   }
   return databaseId;
 };

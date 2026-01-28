@@ -44,21 +44,22 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID_RAW = os.getenv("DB_ID")
+NOTION_DATABASE_ID_RAW = os.getenv("NOTION_DATABASE_ID")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY")
 TEST_MODE = (os.getenv("TEST_MODE") or "").lower() in ("1", "true", "yes", "y", "on")
 
 if not NOTION_TOKEN:
     raise RuntimeError("NOTION_TOKEN is not set. Put it in .env or your environment.")
-if not DB_ID_RAW:
-    raise RuntimeError("DB_ID is not set. Put it in .env or your environment.")
 
-# Format DB_ID to ensure it has dashes (required for some API endpoints/URLs)
+if not NOTION_DATABASE_ID_RAW:
+    raise RuntimeError("NOTION_DATABASE_ID is not set. Put it in .env or your environment.")
+
+# Format NOTION_DATABASE_ID to ensure it has dashes (required for some API endpoints/URLs)
 try:
-    DB_ID = str(uuid.UUID(DB_ID_RAW))
+    NOTION_DATABASE_ID = str(uuid.UUID(NOTION_DATABASE_ID_RAW))
 except ValueError:
-    logger.warning(f"DB_ID {DB_ID_RAW} doesn't look like a UUID. Using as-is.")
-    DB_ID = DB_ID_RAW
+    logger.warning(f"NOTION_DATABASE_ID {NOTION_DATABASE_ID_RAW} doesn't look like a UUID. Using as-is.")
+    NOTION_DATABASE_ID = NOTION_DATABASE_ID_RAW
 
 if not OPENAI_KEY:
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env or your environment.")
@@ -178,7 +179,7 @@ for e in all_entries:
     processed += 1
     normalized_link = normalize_url(e.link)
     logger.info(f"[{processed}/{total_entries}] {e.title}")
-    if notion_page_exists_by_url(DB_ID, e.link):
+    if notion_page_exists_by_url(NOTION_DATABASE_ID, e.link):
         logger.info("  -> skip (already exists)")
         skipped_count += 1
         continue
@@ -252,7 +253,7 @@ for e in all_entries:
             properties["Published"] = {"date": {"start": published_date_str}}
 
         notion.pages.create(
-          parent={"database_id": DB_ID},
+          parent={"database_id": NOTION_DATABASE_ID},
           properties=properties
         )
         added_count += 1
