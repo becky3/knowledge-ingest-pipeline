@@ -15,7 +15,7 @@ interface NotionPost {
 export default async function Home() {
   let posts: NotionPost[] = [];
   try {
-    posts = (await getDatabase()) as any;
+    posts = (await getDatabase()) as unknown as NotionPost[];
   } catch (error) {
     console.error("Failed to fetch posts:", error);
     // Continue with empty posts to avoid build failure
@@ -68,7 +68,7 @@ export default async function Home() {
                   {summary.length > 0 && (
                     <div className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm lg:text-base">
                       <p>
-                        {summary.map((text: any) => text.plain_text).join("")}
+                        {summary.map((text: { plain_text: string }) => text.plain_text).join("")}
                       </p>
                     </div>
                   )}
