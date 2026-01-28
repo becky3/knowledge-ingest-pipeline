@@ -27,3 +27,58 @@ export const getDatabaseId = () => {
 };
 
 
+export const getDatabase = async () => {
+  const notion = getNotionClient();
+  const databaseId = getDatabaseId();
+
+  // Step 1: Specific to Notion API 2025-09-03 (SDK v5+)
+  // Retrieve the database container to find the active Data Source ID
+  const db = await notion.databases.retrieve({ database_id: databaseId });
+
+  // Cast to any because data_sources might be missing from strict typedefs in some versions
+  const dataSources = (db as any).data_sources;
+
+  if (!dataSources || dataSources.length === 0) {
+    throw new Error("No data sources found in the specified database. Please verify the Database ID.");
+  }
+
+  const dataSourceId = dataSources[0].id;
+
+  // Step 2: Query using the retrieved Data Source ID with simple pagination handling
+  const allResults: any[] = [];
+  let hasMore = true;
+  let startCursor: string | undefined = undefined;
+
+  while (hasMore) {
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      sorts: [
+        {
+          property: "Published",
+          direction: "descending",
+        },
+      ],
+      page_size: 100, // Fetch max per page
+      ...(startCursor ? { start_cursor: startCursor } : {}),
+    });
+
+    allResults.push(...response.results);
+    hasMore = response.has_more;
+    startCursor = (response as any).next_cursor ?? undefined;
+  }
+
+  return allResults;
+};
+
+export const getPage = async (pageId: string) => {
+  const notion = getNotionClient();
+
+  try {
+    const response = await notion.pages.retrieve({ page_id: pageId });
+    return response;
+  } catch (error) {
+    console.error("Failed to retrieve Notion page", { pageId, error });
+    return null;
+  }
+};
+
