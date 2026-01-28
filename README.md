@@ -34,6 +34,18 @@ uv sync
 - `OPENAI_API_KEY` または `OPENAI_KEY`: OpenAI の API キー
 - `TEST_MODE` (任意): `true` の場合は書き込みをスキップ
 
+## Notion データベース設定
+
+連携する Notion データベースには以下のプロパティが必要です。
+
+| プロパティ名 | 種類 (Type) | 説明 |
+| --- | --- | --- |
+| **Title** | Title (タイトル) | 記事のタイトル |
+| **URL** | URL | 記事のオリジナルの URL |
+| **Summary** | Text (テキスト) | AI による要約本文 |
+| **Published** | Date (日付) | 記事の発行日 (ソートに使用) |
+
+
 ## 実行
 
 ```bash
