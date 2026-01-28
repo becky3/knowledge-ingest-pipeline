@@ -58,7 +58,27 @@ uv run python scripts/main.py
 - 既存チェックは URL を正規化して比較します（クエリやフラグメントは除外）。
 - Notion への保存は **生の URL** を使用します。
 
-## トラブルシュート
+## 開発支援ツール
+2. 
+3. ### PR 指摘抽出ツール (`fetch_reviews.py`)
+4. 
+5. GitHub CLI (`gh`) を使用して、指定した PR の未解決の指摘（コメント）を抽出します。
+6. CI やレビュー対応時の漏れチェックに便利です。
+7. 
+8. **実行方法:**
+9. 
+10. ```bash
+11. # PR番号を指定して実行
+12. uv run python scripts/debug/fetch_reviews.py <PR番号>
+13. 
+14. # 出力をファイルに保存する場合
+15. uv run python scripts/debug/fetch_reviews.py <PR番号> > feedback.txt
+16. ```
+17. 
+18. **前提条件:**
+19. - GitHub CLI (`gh`) がインストールされ、ログイン済みであること
+20. 
+21. ## トラブルシュート
 
 - `ModuleNotFoundError` が出る場合は `uv sync` を実行してください。
 - Notion の権限エラーが出る場合は Integration の共有と `NOTION_DATABASE_ID` を確認してください。
