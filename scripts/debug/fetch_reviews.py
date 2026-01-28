@@ -1,31 +1,53 @@
 import subprocess
 import json
+import shutil
+import os
 import sys
 
-
-GH_PATH = r"C:\Program Files\GitHub CLI\gh.exe"
+def get_gh_command():
+    gh_path = shutil.which("gh")
+    if gh_path:
+        return [gh_path]
+    
+    # Fallback to hardcoded path on Windows if not in PATH (development environment specific)
+    win_path = r"C:\Program Files\GitHub CLI\gh.exe"
+    if sys.platform == "win32" and os.path.exists(win_path):
+         return [win_path]
+    
+    return ["gh"] # Expecting it in PATH
 
 def run_gh_command(args):
-    cmd = [GH_PATH] + args
+    cmd = get_gh_command() + args
+    print(f"DEBUG: Running command: {cmd}", file=sys.stderr)
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             check=True,
-            shell=False  # No need for shell=True with absolute path
+            shell=False,
+            encoding='utf-8' # Force utf-8
         )
+        # print(f"DEBUG: Output: {result.stdout[:100]}...", file=sys.stderr) 
+        if not result.stdout:
+            print("DEBUG: stdout is empty/None")
+            return []
+            
         return json.loads(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"Error running gh command: {e}", file=sys.stderr)
         print(e.stderr, file=sys.stderr)
         return []
-    except json.JSONDecodeError:
-        print("Failed to decode JSON response", file=sys.stderr)
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode JSON response: {e}", file=sys.stderr)
+        print(f"Raw Output: {result.stdout}", file=sys.stderr)
         return []
     except FileNotFoundError:
-         print(f"Executable not found at {GH_PATH}", file=sys.stderr)
+         print(f"Executable not found: 'gh'", file=sys.stderr)
          return []
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        return []
 
 def main():
     if len(sys.argv) < 2:
