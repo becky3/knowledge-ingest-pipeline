@@ -49,67 +49,104 @@ def run_gh_command(args):
         print(f"Unexpected error: {e}", file=sys.stderr)
         return []
 
+def fetch_review_threads_graphql(owner, repo, pr_number):
+    query = """
+    query($owner:String!, $name:String!, $pr:Int!) {
+      repository(owner:$owner, name:$name) {
+        pullRequest(number:$pr) {
+          reviewThreads(last: 50) {
+            nodes {
+              isResolved
+              path
+              line
+              originalLine
+              comments(first: 1) {
+                nodes {
+                  body
+                  author { login }
+                  createdAt
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    
+    # Construct fields correctly for gh api graphql
+    args = [
+        "api", "graphql",
+        "-f", f"query={query}",
+        "-F", f"owner={owner}",
+        "-F", f"name={repo}",
+        "-F", f"pr={int(pr_number)}"
+    ]
+    
+    return run_gh_command(args)
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python fetch_reviews.py <pr_number>")
+        print("Usage: python fetch_reviews.py <pr_number> [--all]")
         sys.exit(1)
 
     pr_number = sys.argv[1]
+    show_all = "--all" in sys.argv
     
     print(f"Fetching reviews for PR #{pr_number}...")
 
     # Fetch repo info to get owner/repo
     repo_info = run_gh_command(["repo", "view", "--json", "nameWithOwner"])
     repo_full_name = repo_info.get("nameWithOwner", "becky3/knowledge-ingest-pipeline") if isinstance(repo_info, dict) else "becky3/knowledge-ingest-pipeline"
+    owner, repo_name = repo_full_name.split("/", 1)
 
-    # Fetch review comments (inline comments)
-    comments = run_gh_command(["api", f"repos/{repo_full_name}/pulls/{pr_number}/comments"])
+    # Use GraphQL to get threads with resolved status
+    data = fetch_review_threads_graphql(owner, repo_name, pr_number)
     
-    # Fetch top-level reviews
-    reviews = run_gh_command(["api", f"repos/{repo_full_name}/pulls/{pr_number}/reviews"])
+    threads = []
+    if data and "data" in data:
+         threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
 
     print("\n" + "="*80)
-    print(f"PR #{pr_number} REVIEWS")
+    print(f"PR #{pr_number} UNRESOLVED THREADS" + (" (Showing ALL)" if show_all else ""))
     print("="*80 + "\n")
 
-    # Group inline comments by path
-    comments_by_file = {}
-    for c in comments:
-        path = c.get("path", "Unknown")
-        if path not in comments_by_file:
-            comments_by_file[path] = []
-        comments_by_file[path].append(c)
-
-    for path, file_comments in comments_by_file.items():
-        print(f"FILE: {path}")
-        print("-" * len(f"FILE: {path}"))
-        for c in file_comments:
-            line = c.get("line") or c.get("original_line")
-            user = c.get("user", {}).get("login", "Unknown")
-            body = c.get("body", "").replace("\n", "\n  ")
-            created_at = c.get("created_at")
+    unresolved_count = 0
+    
+    for thread in threads:
+        is_resolved = thread.get("isResolved", False)
+        
+        if is_resolved and not show_all:
+            continue
             
-            print(f"Line {line} | {user} ({created_at}):")
-            print(f"  {body}")
-            print("-" * 40)
+        unresolved_count += 1
+        path = thread.get("path", "Unknown")
+        # Line info is sometimes top-level or on the comment
+        line = thread.get("line") or thread.get("originalLine") 
+        
+        comments = thread.get("comments", {}).get("nodes", [])
+        if not comments:
+            continue
+            
+        first_comment = comments[0]
+        user = first_comment.get("author", {}).get("login", "Unknown")
+        body = first_comment.get("body", "").replace("\n", "\n  ")
+        created_at = first_comment.get("createdAt")
+        status_str = "[RESOLVED]" if is_resolved else "[OPEN]"
+
+        print(f"{status_str} FILE: {path}")
+        print("-" * 60)
+        print(f"Line {line} | {user} ({created_at}):")
+        print(f"  {body}")
+        print("-" * 60)
         print("\n")
 
-    print("\n" + "="*80)
-    print("GENERAL REVIEWS")
-    print("="*80 + "\n")
+    if unresolved_count == 0:
+        print("No unresolved review threads found! Good job!")
     
-    for r in reviews:
-        state = r.get("state")
-        # if state == "COMMENTED" and not r.get("body"):
-        #     continue # Skip empty comments
-            
-        user = r.get("user", {}).get("login", "Unknown")
-        body = r.get("body", "").replace("\n", "\n  ")
-        submitted_at = r.get("submitted_at")
-        
-        print(f"User: {user} | State: {state} | {submitted_at}")
-        print(f"  {body}")
-        print("-" * 40)
+    pass # End of main logic replacement
+
+
 
 if __name__ == "__main__":
     main()
