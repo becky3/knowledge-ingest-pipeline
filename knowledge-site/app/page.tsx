@@ -8,7 +8,6 @@ interface NotionPost {
     Published?: { date: { start: string } };
     URL?: { url: string };
     Summary?: { rich_text: Array<{ plain_text: string }> };
-    summary?: { rich_text: Array<{ plain_text: string }> }; // Fallback case
   };
 }
 export default async function Home() {
