@@ -1,24 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #09090b;
-  /* Zinc 950 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 
-  --color-primary: #4f46e5;
-  /* Indigo 600 */
-  --color-primary-foreground: #ffffff;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 
-  --color-muted: #f4f4f5;
-  /* Zinc 100 */
-  --color-muted-foreground: #71717a;
-  /* Zinc 500 */
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-card: #ffffff;
-  --color-card-foreground: #09090b;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
 
-  --color-border: #e4e4e7;
-  /* Zinc 200 */
+  --color-border: var(--border);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
