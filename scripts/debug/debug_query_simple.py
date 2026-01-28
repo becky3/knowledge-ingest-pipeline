@@ -22,16 +22,16 @@ def load_dotenv(path: str) -> None:
 
 load_dotenv(".env")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID_RAW = os.getenv("DB_ID")
+NOTION_DATABASE_ID_RAW = os.getenv("NOTION_DATABASE_ID")
 
 try:
-    DB_ID = str(uuid.UUID(DB_ID_RAW))
-    DASHED_ID = DB_ID
+    NOTION_DATABASE_ID = str(uuid.UUID(NOTION_DATABASE_ID_RAW))
+    DASHED_ID = NOTION_DATABASE_ID
 except ValueError:
-    DASHED_ID = DB_ID_RAW
+    DASHED_ID = NOTION_DATABASE_ID_RAW
 
 # For testing, also try non-dashed if available
-NO_DASH_ID = DB_ID_RAW.replace("-", "")
+NO_DASH_ID = NOTION_DATABASE_ID_RAW.replace("-", "")
 
 client = Client(auth=NOTION_TOKEN)
 

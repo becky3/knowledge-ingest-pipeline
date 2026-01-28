@@ -21,16 +21,16 @@ def load_dotenv(path: str) -> None:
 
 load_dotenv(".env")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID = os.getenv("DB_ID") # Should be the child database ID now
+NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID") # Should be the child database ID now
 
 client = Client(auth=NOTION_TOKEN)
 
-print(f"Testing query on DB ID: {DB_ID}")
+print(f"Testing query on DB ID: {NOTION_DATABASE_ID}")
 
 # Try retrieve first
 print("Calling Retrieve...")
 try:
-    db = client.databases.retrieve(database_id=DB_ID)
+    db = client.databases.retrieve(database_id=NOTION_DATABASE_ID)
     print("Retrieve Success!")
     print(f"Title: {db.get('title')}")
 except Exception as e:
@@ -38,7 +38,7 @@ except Exception as e:
 
 
 # Try direct request workaround first as main.py does
-path = f"databases/{DB_ID}/query"
+path = f"databases/{NOTION_DATABASE_ID}/query"
 print(f"Calling POST {path}")
 try:
     resp = client.request(

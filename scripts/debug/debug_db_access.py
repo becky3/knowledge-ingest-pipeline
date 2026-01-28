@@ -21,16 +21,16 @@ def load_dotenv(path: str) -> None:
 
 load_dotenv(".env")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID = os.getenv("DB_ID")
-DB_ID = str(uuid.UUID(DB_ID))
+NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
+NOTION_DATABASE_ID = str(uuid.UUID(NOTION_DATABASE_ID))
 
-print(f"Checking DB_ID: {DB_ID}")
+print(f"Checking NOTION_DATABASE_ID: {NOTION_DATABASE_ID}")
 
 client = Client(auth=NOTION_TOKEN)
 
 try:
     # Try to retrieve the database
-    db = client.databases.retrieve(database_id=DB_ID)
+    db = client.databases.retrieve(database_id=NOTION_DATABASE_ID)
     print("Database retrieve success!")
     print(f"Title: {db.get('title')}")
 except Exception as e:
@@ -41,14 +41,14 @@ except Exception as e:
     # If not a database, maybe it is a page?
     print("\nTrying to retrieve as Page...")
     try:
-        page = client.pages.retrieve(page_id=DB_ID)
+        page = client.pages.retrieve(page_id=NOTION_DATABASE_ID)
         print("Page retrieve success!")
         print(f"Page Type: {page.get('object')}")
         print(f"Page URL: {page.get('url')}")
         
         # Look for child database
         print("\nChecking for child blocks (looking for database)...")
-        children = client.blocks.children.list(block_id=DB_ID)
+        children = client.blocks.children.list(block_id=NOTION_DATABASE_ID)
         for block in children.get("results", []):
             if block.get("type") == "child_database":
                 print(f"FOUND CHILD DATABASE!")

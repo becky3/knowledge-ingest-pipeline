@@ -9,11 +9,6 @@ def get_gh_command():
     if gh_path:
         return [gh_path]
     
-    # Fallback to hardcoded path on Windows if not in PATH (development environment specific)
-    win_path = r"C:\Program Files\GitHub CLI\gh.exe"
-    if sys.platform == "win32" and os.path.exists(win_path):
-        return [win_path]
-    
     return ["gh"] # Expecting it in PATH
 
 def run_gh_command(args):
