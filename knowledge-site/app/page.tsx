@@ -2,13 +2,17 @@
 import { getDatabase } from "../lib/notion";
 import { ArticleCard } from "@/components/ArticleCard";
 
+interface RichTextItem {
+  plain_text: string;
+}
+
 interface NotionPost {
   id: string;
   properties: {
-    Title?: { title: Array<{ plain_text: string }> };
+    Title?: { title: Array<RichTextItem> };
     Published?: { date: { start: string } };
     URL?: { url: string };
-    Summary?: { rich_text: Array<{ plain_text: string }> };
+    Summary?: { rich_text: Array<RichTextItem> };
   };
 }
 export default async function Home() {
@@ -23,7 +27,7 @@ export default async function Home() {
 
   return (
     <div className="flex-1 w-full bg-background">
-      <section className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
+      <section className="container mx-auto px-4 pt-24 pb-12 md:pt-32 md:pb-20 max-w-7xl">
         <div className="flex flex-col gap-2 mb-12 sm:mb-16">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-balance">
             Curated Knowledge
@@ -54,8 +58,14 @@ export default async function Home() {
               const originalUrl = post.properties.URL?.url || "#";
               const summary =
                 post.properties.Summary?.rich_text
-                  ?.map((t: { plain_text: string }) => t.plain_text)
+                  ?.map((t: RichTextItem) => t.plain_text)
                   .join("") || "";
+
+              // If no URL is present, we skip rendering or render differently?
+              // The feedback suggests better fallback. Let's return null (hide) for now as "Curated Knowledge" implies we should have a link.
+              if (originalUrl === "#") {
+                return null;
+              }
 
               return (
                 <ArticleCard

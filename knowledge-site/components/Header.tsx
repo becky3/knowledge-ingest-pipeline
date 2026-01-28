@@ -15,16 +15,17 @@ export function Header() {
                     <span>Curated Knowledge</span>
                 </Link>
 
-                <div className="flex items-center gap-4">
+                <nav className="flex items-center gap-4">
                     <a
                         href="https://github.com/becky3/knowledge-ingest-pipeline"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Open the knowledge-ingest-pipeline GitHub repository in a new tab"
                     >
                         GitHub
                     </a>
-                </div>
+                </nav>
             </div>
         </header>
     );

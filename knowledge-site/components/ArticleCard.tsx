@@ -1,5 +1,5 @@
 import { Calendar, ExternalLink, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils"; // We might need to create this if it doesn't exist, checking next.
+import { cn } from "@/lib/utils";
 
 interface ArticleCardProps {
     title: string;
@@ -45,6 +45,7 @@ export function ArticleCard({ title, summary, date, url, className }: ArticleCar
                     Read Article <ArrowRight className="w-3.5 h-3.5" />
                 </span>
                 <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="sr-only">(opens in new tab)</span>
             </div>
         </a>
     );

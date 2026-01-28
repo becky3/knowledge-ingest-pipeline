@@ -1,19 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  
-  --color-border: var(--border);
+  --color-background: #ffffff;
+  --color-foreground: #09090b;
+  /* Zinc 950 */
+
+  --color-primary: #4f46e5;
+  /* Indigo 600 */
+  --color-primary-foreground: #ffffff;
+
+  --color-muted: #f4f4f5;
+  /* Zinc 100 */
+  --color-muted-foreground: #71717a;
+  /* Zinc 500 */
+
+  --color-card: #ffffff;
+  --color-card-foreground: #09090b;
+
+  --color-border: #e4e4e7;
+  /* Zinc 200 */
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
@@ -25,35 +30,47 @@
 */
 :root {
   --background: #ffffff;
-  --foreground: #09090b; /* Zinc 950 */
+  --foreground: #09090b;
+  /* Zinc 950 */
 
-  --primary: #4f46e5; /* Indigo 600 */
+  --primary: #4f46e5;
+  /* Indigo 600 */
   --primary-foreground: #ffffff;
 
-  --muted: #f4f4f5; /* Zinc 100 */
-  --muted-foreground: #71717a; /* Zinc 500 */
+  --muted: #f4f4f5;
+  /* Zinc 100 */
+  --muted-foreground: #71717a;
+  /* Zinc 500 */
 
   --card: #ffffff;
   --card-foreground: #09090b;
 
-  --border: #e4e4e7; /* Zinc 200 */
+  --border: #e4e4e7;
+  /* Zinc 200 */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b; /* Zinc 950 */
-    --foreground: #fafafa; /* Zinc 50 */
+    --background: #09090b;
+    /* Zinc 950 */
+    --foreground: #fafafa;
+    /* Zinc 50 */
 
-    --primary: #6366f1; /* Indigo 500 */
+    --primary: #6366f1;
+    /* Indigo 500 */
     --primary-foreground: #ffffff;
 
-    --muted: #27272a; /* Zinc 800 */
-    --muted-foreground: #a1a1aa; /* Zinc 400 */
+    --muted: #27272a;
+    /* Zinc 800 */
+    --muted-foreground: #a1a1aa;
+    /* Zinc 400 */
 
-    --card: #18181b; /* Zinc 900 */
+    --card: #18181b;
+    /* Zinc 900 */
     --card-foreground: #fafafa;
-    
-    --border: #27272a; /* Zinc 800 */
+
+    --border: #27272a;
+    /* Zinc 800 */
   }
 }
 
@@ -71,7 +88,7 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   /* Glassmorphism utility */
   .glass {
     @apply bg-white/70 dark:bg-black/70 backdrop-blur-md border border-white/20 dark:border-white/10;
