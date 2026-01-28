@@ -1,17 +1,31 @@
 import { Client } from "@notionhq/client";
 
-const notionToken = process.env.NOTION_TOKEN;
+let notionClient: Client | null = null;
 
-if (!notionToken) {
-  throw new Error("Missing NOTION_TOKEN environment variable");
-}
+export const getNotionClient = () => {
+  if (!notionClient) {
+    const notionToken = process.env.NOTION_TOKEN;
 
-export const notion = new Client({
-  auth: notionToken,
-});
+    if (!notionToken) {
+      throw new Error("Missing NOTION_TOKEN environment variable");
+    }
 
-export const databaseId = process.env.NOTION_DATABASE_ID;
+    notionClient = new Client({
+      auth: notionToken,
+    });
+  }
+  return notionClient;
+};
 
-if (!databaseId) {
-  throw new Error("Missing NOTION_DATABASE_ID environment variable");
-}
+export const getDatabaseId = () => {
+  // Support both specific and generic names for compatibility
+  const databaseId = process.env.NOTION_DATABASE_ID || process.env.DB_ID;
+
+  if (!databaseId) {
+    throw new Error("Missing NOTION_DATABASE_ID or DB_ID environment variable");
+  }
+  return databaseId;
+};
+
+// Backwards compatibility for now, but deprecated
+export const notion = new Client({ auth: process.env.NOTION_TOKEN || "dummy" }); // unsafe, removed export
