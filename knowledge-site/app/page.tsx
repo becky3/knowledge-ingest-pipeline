@@ -11,11 +11,11 @@ interface NotionPost {
     summary?: { rich_text: Array<{ plain_text: string }> }; // Fallback case
   };
 }
-
 export default async function Home() {
   let posts: NotionPost[] = [];
   try {
-    posts = (await getDatabase()) as unknown as NotionPost[];
+    const dbPosts = await getDatabase();
+    posts = dbPosts as unknown as NotionPost[];
   } catch (error) {
     console.error("Failed to fetch posts:", error);
     // Continue with empty posts to avoid build failure
@@ -43,13 +43,12 @@ export default async function Home() {
               const originalUrl = post.properties.URL?.url || "#";
               const summary =
                 post.properties.Summary?.rich_text ||
-                post.properties.summary?.rich_text ||
                 [];
 
               return (
                 <div
                   key={post.id}
-                  className="w-full p-6 border rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                  className="w-full p-6 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
                 >
                   <a
                     href={originalUrl}
@@ -57,10 +56,10 @@ export default async function Home() {
                     rel="noopener noreferrer"
                     className="block mb-2 group"
                   >
-                    <span className="sr-only">(opens in a new tab)</span>
                     <h2 className="text-2xl font-semibold text-black dark:text-zinc-50 group-hover:underline">
                       {title}
                     </h2>
+                    <span className="sr-only">(opens in a new tab)</span>
                     <p className="text-zinc-500 text-sm mt-1">{date}</p>
                   </a>
 
