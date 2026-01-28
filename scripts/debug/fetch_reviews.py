@@ -12,7 +12,7 @@ def get_gh_command():
     # Fallback to hardcoded path on Windows if not in PATH (development environment specific)
     win_path = r"C:\Program Files\GitHub CLI\gh.exe"
     if sys.platform == "win32" and os.path.exists(win_path):
-         return [win_path]
+        return [win_path]
     
     return ["gh"] # Expecting it in PATH
 
@@ -43,8 +43,8 @@ def run_gh_command(args):
         print(f"Raw Output: {result.stdout}", file=sys.stderr)
         return []
     except FileNotFoundError:
-         print(f"Executable not found: 'gh'", file=sys.stderr)
-         return []
+        print(f"Executable not found: 'gh'", file=sys.stderr)
+        return []
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
         return []
@@ -97,7 +97,11 @@ def main():
 
     # Fetch repo info to get owner/repo
     repo_info = run_gh_command(["repo", "view", "--json", "nameWithOwner"])
-    repo_full_name = repo_info.get("nameWithOwner", "becky3/knowledge-ingest-pipeline") if isinstance(repo_info, dict) else "becky3/knowledge-ingest-pipeline"
+    if not isinstance(repo_info, dict) or "nameWithOwner" not in repo_info:
+        print("Error: Unable to determine repository information from 'gh repo view'.")
+        sys.exit(1)
+    
+    repo_full_name = repo_info["nameWithOwner"]
     owner, repo_name = repo_full_name.split("/", 1)
 
     # Use GraphQL to get threads with resolved status
@@ -105,7 +109,7 @@ def main():
     
     threads = []
     if data and "data" in data:
-         threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
+        threads = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
 
     print("\n" + "="*80)
     print(f"PR #{pr_number} UNRESOLVED THREADS" + (" (Showing ALL)" if show_all else ""))
@@ -144,7 +148,7 @@ def main():
     if unresolved_count == 0:
         print("No unresolved review threads found! Good job!")
     
-    pass # End of main logic replacement
+
 
 
 
