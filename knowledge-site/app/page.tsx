@@ -25,18 +25,35 @@ export default async function Home() {
             const date = dateStr ? new Date(dateStr).toLocaleDateString("ja-JP") : "";
 
             const title = post.properties.Title?.title?.[0]?.plain_text || "No Title";
+            const originalUrl = post.properties.URL?.url || "#";
+            const summary = post.properties.Summary?.rich_text || post.properties.summary?.rich_text || [];
 
             return (
-              <Link
+              <div
                 key={post.id}
-                href={`/${post.id}`}
-                className="block p-6 border rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                className="w-full p-6 border rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
               >
-                <h2 className="text-2xl font-semibold mb-2 text-black dark:text-zinc-50">
-                  {title}
-                </h2>
-                <p className="text-zinc-500 text-sm">{date}</p>
-              </Link>
+                <a
+                  href={originalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mb-2 group"
+                >
+                  <h2 className="text-2xl font-semibold text-black dark:text-zinc-50 group-hover:underline">
+                    {title}
+                  </h2>
+                  <p className="text-zinc-500 text-sm mt-1">{date}</p>
+                </a>
+
+                {/* Summary Rendering */}
+                {summary.length > 0 && (
+                  <div className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm lg:text-base">
+                    <p>
+                      {summary.map((text: any) => text.plain_text).join("")}
+                    </p>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
