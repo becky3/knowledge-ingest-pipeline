@@ -45,9 +45,7 @@ export const getDatabase = async () => {
   const dataSourceId = dataSources[0].id;
 
   // Step 2: Query using the retrieved Data Source ID
-  // Use dataSources.query because standard databases.query is incompatible with the 
-  // current SDK/API version combination for this specific setup.
-  // @ts-ignore: dataSources.query might be missing from type definitions in this version
+  // @ts-ignore
   const response = await notion.dataSources.query({
     data_source_id: dataSourceId,
     sorts: [
