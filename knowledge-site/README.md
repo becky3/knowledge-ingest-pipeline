@@ -39,9 +39,9 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Create a `.env.local` file in the project root and add the following values:
 
-
 1.  **NOTION_TOKEN**: Your Notion Internal Integration Token.
 2.  **NOTION_DATABASE_ID**: The ID of the Notion database to display.
+
 
 Example `.env.local`:
 

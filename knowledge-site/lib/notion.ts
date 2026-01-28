@@ -18,7 +18,6 @@ export const getNotionClient = () => {
 };
 
 export const getDatabaseId = () => {
-  // Support both specific and generic names for compatibility
   const databaseId = process.env.NOTION_DATABASE_ID;
 
   if (!databaseId) {
@@ -27,5 +26,4 @@ export const getDatabaseId = () => {
   return databaseId;
 };
 
-// Backwards compatibility for now, but deprecated
-export const notion = getNotionClient();
+

@@ -147,10 +147,6 @@ def main():
 
     if unresolved_count == 0:
         print("No unresolved review threads found! Good job!")
-    
-
-
-
 
 if __name__ == "__main__":
     main()
