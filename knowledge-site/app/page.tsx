@@ -1,5 +1,6 @@
 
 import { getDatabase } from "../lib/notion";
+import { ArticleCard } from "@/components/ArticleCard";
 
 interface NotionPost {
   id: string;
@@ -21,64 +22,54 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-start py-16 px-6 bg-white dark:bg-black sm:items-start">
-        <h1 className="text-4xl font-bold mb-12 text-black dark:text-zinc-50 tracking-tight self-start">
-          Curated Knowledge
-        </h1>
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left w-full">
-          {posts.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No posts available.</p>
-          ) : (
-            posts.map((post) => {
-              // "Published" is a date property based on main.py analysis
+    <div className="flex-1 w-full bg-background">
+      <section className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
+        <div className="flex flex-col gap-2 mb-12 sm:mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground text-balance">
+            Curated Knowledge
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl text-balance">
+            Discover insights, tutorials, and articles curated from across the web.
+          </p>
+        </div>
+
+        {posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-xl bg-card/50">
+            <p className="text-muted-foreground text-lg">No posts available yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {posts.map((post) => {
               const dateStr = post.properties.Published?.date?.start;
               const date = dateStr
-                ? new Date(dateStr).toLocaleDateString("ja-JP")
-                : "";
+                ? new Date(dateStr).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+                : "Unknown Date";
 
               const title =
                 post.properties.Title?.title?.[0]?.plain_text || "No Title";
               const originalUrl = post.properties.URL?.url || "#";
               const summary =
-                post.properties.Summary?.rich_text ||
-                [];
+                post.properties.Summary?.rich_text
+                  ?.map((t: { plain_text: string }) => t.plain_text)
+                  .join("") || "";
 
               return (
-                <div
+                <ArticleCard
                   key={post.id}
-                  className="w-full p-6 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                >
-                  <a
-                    href={originalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block mb-2 group"
-                  >
-                    <h2 className="text-2xl font-semibold text-black dark:text-zinc-50 group-hover:underline">
-                      {title}
-                    </h2>
-                    <span className="sr-only">(opens in a new tab)</span>
-                    <p className="text-zinc-500 text-sm mt-1">{date}</p>
-                  </a>
-
-                  {/* Summary Rendering */}
-                  {summary.length > 0 && (
-                    <div className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm lg:text-base">
-                      <p>
-                        {summary.map((text: { plain_text: string }) => text.plain_text).join("")}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  title={title}
+                  summary={summary}
+                  date={date}
+                  url={originalUrl}
+                />
               );
-            })
-          )}
-        </div>
-
-
-
-      </main>
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

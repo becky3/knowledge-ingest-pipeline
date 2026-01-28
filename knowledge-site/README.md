@@ -20,28 +20,37 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## UI/UX Design Implementation
 
-To learn more about Next.js, take a look at the following resources:
+This project features a modern, premium design system built with **Tailwind CSS**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Design System
+- **Color Palette**: 
+  - **Background**: Zinc 50 (#fafafa) / Zinc 950 (#09090b) for dark mode.
+  - **Accent**: Indigo 600 (#4f46e5) / Indigo 500 (#6366f1).
+  - Designed for high contrast and readability.
+- **Typography**: Uses `Geist Sans` and `Geist Mono` for a clean, technical aesthetic.
+- **Glassmorphism**: Header and other overlay elements use backdrop blur (`.glass` utility) for a modern feel.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Components
+- **ArticleCard**:
+  - Displays article metadata (Title, Date, Summary).
+  - Interactive hover state (Lift effect, Shadow, "Read Article" animation).
+  - Fully responsive grid layout (1 col mobile, 2 col tablet, 3 col desktop).
+- **Header/Footer**:
+  - Sticky header for easy navigation.
+  - Consistent branding.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
+### Responsiveness
+- The layout is fully responsive, adapting from mobile phones to large desktop screens.
+- Grid systems automatically adjust column counts.
 
 ## Notion Integration Setup
-
 
 Create a `.env.local` file in the project root and add the following values:
 
 1.  **NOTION_TOKEN**: Your Notion Internal Integration Token.
 2.  **NOTION_DATABASE_ID**: The ID of the Notion database to display.
-
 
 Example `.env.local`:
 
@@ -49,4 +58,3 @@ Example `.env.local`:
 NOTION_TOKEN=ntn_...
 NOTION_DATABASE_ID=...
 ```
-
