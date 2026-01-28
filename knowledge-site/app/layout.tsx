@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Knowledge Site",
+  title: "Curated Knowledge",
   description: "A public knowledge base powered by Notion and Next.js",
 };
 

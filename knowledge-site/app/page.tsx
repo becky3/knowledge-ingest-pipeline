@@ -16,8 +16,11 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-start py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-start py-16 px-6 bg-white dark:bg-black sm:items-start">
+        <h1 className="text-4xl font-bold mb-12 text-black dark:text-zinc-50 tracking-tight self-start">
+          Curated Knowledge
+        </h1>
+        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left w-full">
           {/* The original h1 and p tags are replaced by the posts map */}
           {posts.map((post: any) => {
             // "Published" is a date property based on main.py analysis
