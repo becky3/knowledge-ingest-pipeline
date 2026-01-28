@@ -42,6 +42,7 @@ export default async function Home() {
                   rel="noopener noreferrer"
                   className="block mb-2 group"
                 >
+                  <span className="sr-only">(opens in a new tab)</span>
                   <h2 className="text-2xl font-semibold text-black dark:text-zinc-50 group-hover:underline">
                     {title}
                   </h2>
