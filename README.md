@@ -30,7 +30,7 @@ uv sync
 必要な環境変数:
 
 - `NOTION_TOKEN`: Notion Integration のトークン
-- `DB_ID`: Notion データベース ID
+- `NOTION_DATABASE_ID`: Notion データベース ID
 - `OPENAI_API_KEY` または `OPENAI_KEY`: OpenAI の API キー
 - `TEST_MODE` (任意): `true` の場合は書き込みをスキップ
 
@@ -49,4 +49,4 @@ uv run python scripts/main.py
 ## トラブルシュート
 
 - `ModuleNotFoundError` が出る場合は `uv sync` を実行してください。
-- Notion の権限エラーが出る場合は Integration の共有と `DB_ID` を確認してください。
+- Notion の権限エラーが出る場合は Integration の共有と `NOTION_DATABASE_ID` を確認してください。

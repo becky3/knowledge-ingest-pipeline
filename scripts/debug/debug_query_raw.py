@@ -19,14 +19,14 @@ def load_dotenv(path: str) -> None:
 
 load_dotenv(".env")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DB_ID_RAW = os.getenv("DB_ID")
+NOTION_DATABASE_ID_RAW = os.getenv("NOTION_DATABASE_ID")
 
 try:
-    DB_ID = str(uuid.UUID(DB_ID_RAW))
+    NOTION_DATABASE_ID = str(uuid.UUID(NOTION_DATABASE_ID_RAW))
 except ValueError:
-    DB_ID = DB_ID_RAW
+    NOTION_DATABASE_ID = NOTION_DATABASE_ID_RAW
 
-print(f"Testing Raw Request with ID: {DB_ID}")
+print(f"Testing Raw Request with ID: {NOTION_DATABASE_ID}")
 
 headers = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
@@ -34,7 +34,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-url = f"https://api.notion.com/v1/databases/{DB_ID}/query"
+url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
 print(f"POST {url}")
 
 try:
