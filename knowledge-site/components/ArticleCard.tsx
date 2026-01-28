@@ -34,7 +34,7 @@ export function ArticleCard({ title, summary, date, url, className }: ArticleCar
                 </h3>
 
                 {/* Summary */}
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                     {summary}
                 </p>
             </div>
