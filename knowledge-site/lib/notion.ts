@@ -28,4 +28,4 @@ export const getDatabaseId = () => {
 };
 
 // Backwards compatibility for now, but deprecated
-export const notion = new Client({ auth: process.env.NOTION_TOKEN || "dummy" }); // unsafe, removed export
+export const notion = getNotionClient();

@@ -1,7 +1,7 @@
 import subprocess
 import json
 import sys
-import os
+
 
 GH_PATH = r"C:\Program Files\GitHub CLI\gh.exe"
 
@@ -36,11 +36,15 @@ def main():
     
     print(f"Fetching reviews for PR #{pr_number}...")
 
+    # Fetch repo info to get owner/repo
+    repo_info = run_gh_command(["repo", "view", "--json", "nameWithOwner"])
+    repo_full_name = repo_info.get("nameWithOwner", "becky3/knowledge-ingest-pipeline") if isinstance(repo_info, dict) else "becky3/knowledge-ingest-pipeline"
+
     # Fetch review comments (inline comments)
-    comments = run_gh_command(["api", f"repos/becky3/knowledge-ingest-pipeline/pulls/{pr_number}/comments"])
+    comments = run_gh_command(["api", f"repos/{repo_full_name}/pulls/{pr_number}/comments"])
     
     # Fetch top-level reviews
-    reviews = run_gh_command(["api", f"repos/becky3/knowledge-ingest-pipeline/pulls/{pr_number}/reviews"])
+    reviews = run_gh_command(["api", f"repos/{repo_full_name}/pulls/{pr_number}/reviews"])
 
     print("\n" + "="*80)
     print(f"PR #{pr_number} REVIEWS")
