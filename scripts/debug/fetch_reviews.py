@@ -4,6 +4,12 @@ import shutil
 import os
 import sys
 
+# Force UTF-8 for stdout/stderr to handle Japanese characters on Windows
+if sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding.lower() != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 def get_gh_command():
     gh_path = shutil.which("gh")
     if gh_path:
